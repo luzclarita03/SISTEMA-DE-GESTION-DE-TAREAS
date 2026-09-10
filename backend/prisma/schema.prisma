@@ -1,0 +1,55 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id            Int        @id @default(autoincrement())
+  nombre        String
+  email         String     @unique
+  passwordHash  String
+  activo        Boolean    @default(true)
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
+
+  tareas        Tarea[]
+  categorias    Categoria[]
+}
+
+model Categoria {
+  id        Int       @id @default(autoincrement())
+  nombre    String
+  color     String    @default("#3B82F6")
+  usuarioId Int
+
+  usuario   Usuario   @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  tareas    Tarea[]
+
+  @@unique([usuarioId, nombre])
+}
+
+model Tarea {
+  id            Int        @id @default(autoincrement())
+  titulo        String
+  descripcion   String?
+  estado        String     @default("pendiente")
+  prioridad     String     @default("media")
+  fechaLimite   DateTime?
+
+  usuarioId     Int
+  categoriaId   Int?
+
+  usuario       Usuario    @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+  categoria     Categoria? @relation(fields: [categoriaId], references: [id], onDelete: SetNull)
+
+  creadoEn      DateTime   @default(now())
+  actualizadoEn DateTime   @updatedAt
+
+  @@index([usuarioId])
+  @@index([categoriaId])
+  @@index([estado])
+}
