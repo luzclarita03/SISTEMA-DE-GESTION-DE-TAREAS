@@ -1,0 +1,42 @@
+services:
+
+  postgres-db:
+    image: postgres:16
+    container_name: tareas-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: admin_tareas
+      POSTGRES_PASSWORD: admin_tareas
+      POSTGRES_DB: tareas_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    container_name: tareas-backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: "postgresql://admin_tareas:admin_tareas@postgres-db:5432/tareas_db?schema=public"
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - postgres-db
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: tareas-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: "http://localhost:3000"
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
